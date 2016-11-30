@@ -1,0 +1,36 @@
+---
+# defaults file for entrada
+
+
+entrada_version: "0.0.8"
+entrada_download_url: "https://github.com/SIDN/entrada/releases/download/v{{ entrada_version}}/entrada-{{ entrada_version}}.tar.gz"
+entrada_group: "entrada"
+entrada_user: "entrada"
+entrada_user_home: "/home/entrada"
+# override this to disable all cron jobs
+entrada_cronjobs_disabled: no
+
+entrada_nameservers:
+  - "a.example.net"
+  - "b.example.net"
+
+# settings that go into config.sh
+entrada_config_ENTRADA_HOME: "{{ entrada_user_home}}/entrada-latest"
+entrada_config_TMP_DIR : "{{ entrada_config_ENTRADA_HOME }}/tmp/"
+entrada_config_CONFIG_FILE: "{{ entrada_config_ENTRADA_HOME }}/scripts/config/entrada-settings.properties"
+entrada_config_IMPALA_NODE: "localhost"
+entrada_config_HDFS_HOME: "/user/hive/entrada"
+entrada_config_DATA_RSYNC_DIR: "{{ entrada_user_home }}/captures"
+entrada_config_DATA_DIR: "{{ entrada_user_home }}/pcap"
+entrada_config_PCAP_DAYS_TO_KEEP: 10
+entrada_config_DELETE_INPUT_PCAP_FILES: false
+entrada_config_ENTRADA_LOG_DIR: "/var/log/entrada"
+entrada_config_ENTRADA_JAR: "entrada-latest.jar"
+entrada_config_ENTRADA_HEAP_SIZE: 4096
+entrada_config_KRB_USER: ""
+entrada_config_KEYTAB_FILE: "my.keytab"
+entrada_config_ERROR_MAIL: ""
+
+# settings that go into entrada-settings.properties
+entrada_settings_graphite_host: ''
+entrada_settings_tld_suffix: []

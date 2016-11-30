@@ -1,0 +1,99 @@
+---
+# tasks file for entrada
+
+- name: make sure hdfs is available
+  command: hdfs version
+  always_run: true
+  changed_when: false
+
+- name: make sure impala-shell is available
+  command: impala-shell --version
+  always_run: true
+  changed_when: false
+
+- name: Create entrada group
+  group: name="{{ entrada_group }}" state=present
+
+- name: Create entrada user
+  user: name="{{ entrada_user }}" group="{{ entrada_group }}" home="{{ entrada_user_home }}" state=present
+
+- name: Install parallel
+  yum: name="http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/Packages/parallel-20150522-1.el7.cern.noarch.rpm" state=present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+# TODO: other distros
+
+- name: Download and unpack entrada
+  unarchive: copy=no src="{{ entrada_download_url }}" dest="{{ entrada_user_home }}/" remote_src=yes owner="{{ entrada_user }}" group="{{ entrada_group }}"
+
+- name: Symlink ENTRADA_HOME
+  file: src="{{ entrada_user_home }}/entrada-{{ entrada_version}}" dest="{{ entrada_config_ENTRADA_HOME }}" owner="{{ entrada_user }}" group="{{ entrada_group }}" state=link
+
+- name: create log directory
+  file: dest="{{ entrada_config_ENTRADA_LOG_DIR }}" state=directory owner="{{ entrada_user }}" group="{{ entrada_group }}"
+
+- name: create logrotate configuration
+  template: src=entrada-logrotate.j2 dest=/etc/logrotate.d/entrada
+
+- name: create incoming pcap directories
+  file: dest="{{ entrada_config_DATA_RSYNC_DIR }}/{{ item }}" state=directory owner="{{ entrada_user }}" group="{{ entrada_group }}"
+  with_items: "{{ entrada_nameservers }}"
+
+- name: create process pcap directories
+  file: dest="{{ entrada_config_DATA_DIR }}/{{ item }}" state=directory owner="{{ entrada_user }}" group="{{ entrada_group }}"
+  with_items: "{{ entrada_nameservers }}"
+
+- name: create hdfs dir
+  shell: "HADOOP_USER_NAME=hdfs hdfs dfs -mkdir -p {{ entrada_config_HDFS_HOME }}"
+
+- name: fix hdfs dir permission
+  shell: "HADOOP_USER_NAME=hdfs hdfs dfs -chown impala:hive {{ entrada_config_HDFS_HOME }}"
+
+- name: create impala tables
+  shell: "{{ entrada_config_ENTRADA_HOME}}/scripts/install/create_impala_tables.sh"
+  become: yes
+  become_user: "{{ entrada_user }}"
+  become_method: sudo
+  failed_when: false # the scripts exists 1 because of "klist not found on the system, install kerberos clients", but it should work anyway
+
+
+# TODO: how do we handle upgrades?
+# we could add a -e entrada_upgrade flag and if set, execute scripts/database/upgrade/to_{{ entrada_version}}.sql
+# and check beforehand if the symlink currently is "one version below"
+
+- name: write entrada configuration (config.sh)
+  template: src=config.sh.j2 dest={{ entrada_config_ENTRADA_HOME}}/scripts/run/config.sh owner={{ entrada_user }} group={{ entrada_group }}
+
+- name: write entrada settings (entrada-settings.properties)
+  template: src=entrada-settings.properties.j2 dest="{{ entrada_config_CONFIG_FILE }}" owner="{{ entrada_user }}" group="{{ entrada_group }}"
+
+- name: update maxmind db
+  shell: source config.sh && run_update_geo_ip_db.sh
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ entrada_config_ENTRADA_HOME}}/scripts/run"
+  become: yes
+  become_user: "{{ entrada_user }}"
+  become_method: sudo
+
+- name: set up cron PATH
+  cron: user="{{ entrada_user }}" name=PATH env=yes value="{{ entrada_config_ENTRADA_HOME}}/scripts/run/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+- name: set up cron job "Copy pcap to incoming dir every minute"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="Copy pcap to incoming dir every minute" minute="*" hour="*" job=". config.sh && run_00_copy-pcap-to-staging_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-copy-pcap.log 2>&1"
+
+- name: set up cron job "move pcap files from the incoming dir to the processing dir, every minute"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move pcap files from the incoming dir to the processing dir, every minute" minute="*" hour="*" job=". config.sh && run_00_copy-pcap-to-staging_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-copy-pcap.log 2>&1"
+
+- name: set up cron job "proces the pcap files to parquet files and import into staging database table, every 2 minutes"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job="config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
+
+- name: set up cron job "proces the pcap files to parquet files and import into staging database table, every 2 minutes"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job="config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
+
+- name: set up cron job "move the data from the staging table to the datawarehouse table / update maxmind GEO-IP"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move the data from the staging table to the datawarehouse table / update maxmind GEO-IP" minute="0" hour="4" job=". config.sh && run_03_staging_to_warehouse.sh >> $ENTRADA_LOG_DIR/entrada-staging-2-warehouse.log 2>&1 && run-if-today.sh 1 Wed && run_update_geo_ip_db.sh"
+
+- name: set up cron job "cleanup pcap archive, remove files older than 15 days"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="cleanup pcap archive, remove files older than 15 days" minute="0" hour="9" job=". config.sh && run_04_pcap_cleanup.sh >> $ENTRADA_LOG_DIR/entrada-pcap-cleanup.log 2>&1"
+
+- name: set up cron job "Update staging stats every hour"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="Update staging stats every hour" minute="0" hour="*" job=". config.sh && run_05_update_stats_staging.sh >> $ENTRADA_LOG_DIR/entrada-update-stats.log 2>&1"
