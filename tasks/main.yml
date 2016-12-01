@@ -81,10 +81,7 @@
   cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="Copy pcap to incoming dir every minute" minute="*" hour="*" job=". config.sh && run_00_copy-pcap-to-staging_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-copy-pcap.log 2>&1"
 
 - name: set up cron job "move pcap files from the incoming dir to the processing dir, every minute"
-  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move pcap files from the incoming dir to the processing dir, every minute" minute="*" hour="*" job=". config.sh && run_00_copy-pcap-to-staging_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-copy-pcap.log 2>&1"
-
-- name: set up cron job "proces the pcap files to parquet files and import into staging database table, every 2 minutes"
-  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job="config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move pcap files from the incoming dir to the processing dir, every minute" minute="*" hour="*" job=". config.sh && run_01_move_to_processing_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-move-pcap.log 2>&1"
 
 - name: set up cron job "proces the pcap files to parquet files and import into staging database table, every 2 minutes"
   cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job="config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
