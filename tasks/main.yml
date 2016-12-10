@@ -3,12 +3,12 @@
 
 - name: make sure hdfs is available
   command: hdfs version
-  always_run: true
+  check_mode: no
   changed_when: false
 
 - name: make sure impala-shell is available
   command: impala-shell --version
-  always_run: true
+  check_mode: no
   changed_when: false
 
 - name: Create entrada group
@@ -23,7 +23,7 @@
 # TODO: other distros
 
 - name: Download and unpack entrada
-  unarchive: copy=no src="{{ entrada_download_url }}" dest="{{ entrada_user_home }}/" remote_src=yes owner="{{ entrada_user }}" group="{{ entrada_group }}"
+  unarchive: src="{{ entrada_download_url }}" dest="{{ entrada_user_home }}/" remote_src=yes owner="{{ entrada_user }}" group="{{ entrada_group }}"
 
 - name: Symlink ENTRADA_HOME
   file: src="{{ entrada_user_home }}/entrada-{{ entrada_version}}" dest="{{ entrada_config_ENTRADA_HOME }}" owner="{{ entrada_user }}" group="{{ entrada_group }}" state=link
@@ -53,7 +53,7 @@
   become: yes
   become_user: "{{ entrada_user }}"
   become_method: sudo
-  failed_when: false # the scripts exists 1 because of "klist not found on the system, install kerberos clients", but it should work anyway
+  failed_when: false # the script exits 1 because of "klist not found on the system, install kerberos clients", but it should work anyway
 
 
 # TODO: how do we handle upgrades?
