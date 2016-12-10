@@ -38,9 +38,15 @@
   file: dest="{{ entrada_config_DATA_RSYNC_DIR }}/{{ item }}" state=directory owner="{{ entrada_user }}" group="{{ entrada_group }}"
   with_items: "{{ entrada_nameservers }}"
 
+- name: make sure incoming directory belongs to entrada user
+  file: dest="{{ entrada_config_DATA_RSYNC_DIR }}" owner="{{ entrada_user }}" group="{{ entrada_group }}"
+
 - name: create process pcap directories
   file: dest="{{ entrada_config_DATA_DIR }}/{{ item }}" state=directory owner="{{ entrada_user }}" group="{{ entrada_group }}"
   with_items: "{{ entrada_nameservers }}"
+
+- name: make sure process pcap directory belongs to entrada user
+  file: dest="{{ entrada_config_DATA_DIR }}" owner="{{ entrada_user }}" group="{{ entrada_group }}"
 
 - name: create hdfs dir
   shell: "HADOOP_USER_NAME=hdfs hdfs dfs -mkdir -p {{ entrada_config_HDFS_HOME }}"
@@ -84,7 +90,7 @@
   cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move pcap files from the incoming dir to the processing dir, every minute" minute="*" hour="*" job=". config.sh && run_01_move_to_processing_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-move-pcap.log 2>&1"
 
 - name: set up cron job "proces the pcap files to parquet files and import into staging database table, every 2 minutes"
-  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job="config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
+  cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="proces the pcap files to parquet files and import into staging database table, every 2 minutes" minute="*/2" hour="*" job=". config.sh && run_02_partial_loader_bootstrap.sh >> $ENTRADA_LOG_DIR/entrada-partial-loader.log 2>&1"
 
 - name: set up cron job "move the data from the staging table to the datawarehouse table / update maxmind GEO-IP"
   cron: user="{{ entrada_user }}" disabled={{ entrada_cronjobs_disabled }} name="move the data from the staging table to the datawarehouse table / update maxmind GEO-IP" minute="0" hour="4" job=". config.sh && run_03_staging_to_warehouse.sh >> $ENTRADA_LOG_DIR/entrada-staging-2-warehouse.log 2>&1 && run-if-today.sh 1 Wed && run_update_geo_ip_db.sh"
