@@ -12,9 +12,11 @@ This role must be run on a node which is already part of the cloudera hadoop clu
 Role Variables
 --------------
 
+see `defaults/main.yml` for the full list
+
  * `entrada_nameservers`: list of nameserver names, required
  * `entrada_version` : Version number, determines the download url and creates the correct symlink for entrada-latest
- * `entrada_download_url`: download url for the entrada source, determined from 
+ * `entrada_download_url`: download url for the entrada source, determined from `entrada_version` 
  * `entrada_user`: system user which runs all the entrada scripts
  * `entrada_group`: group for the entrada system user
  * `entrada_user_home`: homedir for the entrada system user
@@ -28,17 +30,7 @@ Dependencies
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
     - hosts: entrada_management_nodes
       roles:
          - { role: ansible-role-entrada, entrada_nameservers: ['ns1.example.com', 'ns2.example.com' ] }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
 
