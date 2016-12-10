@@ -20,7 +20,7 @@ Role Variables
  * `entrada_user_home`: homedir for the entrada system user
  * `entrada_cronjobs_disabled`: set to yes to disable all entrada jobs
  * `entrada_config_*`: all configuration variables that go to config.sh, also affects the places where this role downloads entrada, configures folders etc
- * `èntrada_settings_*`: settings that go into entrada-settings.properties
+ * `entrada_settings_*`: settings that go into entrada-settings.properties
 
 Dependencies
 ------------
