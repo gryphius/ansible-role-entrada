@@ -22,6 +22,10 @@
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
 # TODO: other distros
 
+- name: Install java 1.8.0
+  yum: name="java-1.8.0-openjdk-headless" state=present
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
 - name: Download and unpack entrada
   unarchive: src="{{ entrada_download_url }}" dest="{{ entrada_user_home }}/" remote_src=yes owner="{{ entrada_user }}" group="{{ entrada_group }}"
 
