@@ -17,14 +17,13 @@
 - name: Create entrada user
   user: name="{{ entrada_user }}" group="{{ entrada_group }}" home="{{ entrada_user_home }}" state=present
 
-- name: Install parallel
-  yum: name="http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/Packages/parallel-20150522-1.el7.cern.noarch.rpm" state=present
+- name: Install dependencies
+  yum: name="{{ item }}" state=present
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-# TODO: other distros
-
-- name: Install java 1.8.0
-  yum: name="java-1.8.0-openjdk-headless" state=present
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  with_items:
+   - "http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/Packages/parallel-20150522-1.el7.cern.noarch.rpm"
+   - "java-1.8.0-openjdk-headless"
+   - "krb5-workstation"
 
 - name: Download and unpack entrada
   unarchive: src="{{ entrada_download_url }}" dest="{{ entrada_user_home }}/" remote_src=yes owner="{{ entrada_user }}" group="{{ entrada_group }}"
