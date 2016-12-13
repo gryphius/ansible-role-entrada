@@ -1,5 +1,5 @@
-Role Name
-=========
+SIDN Entrada Ansible Role
+=========================
 
 This role installs and configures Entrada by SIDN on a cloudera hadoop cluster node ( http://entrada.sidnlabs.nl/ ) by performing the steps listed on http://entrada.sidnlabs.nl/docs/introduction/install/ :
 
