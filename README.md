@@ -1,7 +1,17 @@
 Role Name
 =========
 
-This role installs and configures Entrada by SIDN ( http://entrada.sidnlabs.nl/ ) 
+This role installs and configures Entrada by SIDN on a cloudera hadoop cluster node ( http://entrada.sidnlabs.nl/ ) by performing the steps listed on http://entrada.sidnlabs.nl/docs/introduction/install/ :
+
+ * Install dependencies (Java, Parallel, Kerberos client)
+ * Create entrada user/group
+ * Download / unpack entrada and symlink 'entrada-latest'
+ * Create log directory and configure log rotation
+ * Create directories for incoming pcaps
+ * Create hdfs dir 
+ * Create impala tables
+ * Set up cron jobs
+ 
 
 Requirements
 ------------
