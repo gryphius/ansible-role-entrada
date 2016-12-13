@@ -24,7 +24,7 @@ Role Variables
 
 see `defaults/main.yml` for the full list
 
- * `entrada_nameservers`: list of nameserver names, required
+ * `entrada_nameservers`: list of nameserver names. This is the only variable that **must** be set, all others have defaults.
  * `entrada_version` : Version number, determines the download url and creates the correct symlink for entrada-latest
  * `entrada_download_url`: download url for the entrada source, determined from `entrada_version` 
  * `entrada_user`: system user which runs all the entrada scripts
