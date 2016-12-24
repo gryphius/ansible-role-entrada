@@ -22,7 +22,6 @@
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
   with_items:
    - "http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/Packages/parallel-20150522-1.el7.cern.noarch.rpm"
-   - "java-1.8.0-openjdk-headless"
    - "krb5-workstation"
 
 - name: Download and unpack entrada
